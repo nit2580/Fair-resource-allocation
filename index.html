@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fair Resource Allocation System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#020408;--surface:#060d14;--surface2:#0a1520;--accent:#00d4ff;--accent2:#ff6b35;--accent3:#7fff6b;--accent4:#bf5fff;--text:#e0f4ff;--muted:#4a7090;--border:rgba(0,212,255,0.15);--glow:0 0 20px rgba(0,212,255,0.3);}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow-x:hidden;scroll-behavior:smooth;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.04) 1px,transparent 1px);background-size:50px 50px;animation:gridMove 20s linear infinite;pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,212,255,0.08) 0%,transparent 60%);pointer-events:none;z-index:0;}
+@keyframes gridMove{0%{transform:translateY(0)}100%{transform:translateY(50px)}}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:.12;pointer-events:none;z-index:0;animation:orbFloat 15s ease-in-out infinite;}
+.orb1{width:600px;height:600px;background:var(--accent);top:-200px;left:-200px;animation-duration:18s;}
+.orb2{width:500px;height:500px;background:var(--accent4);bottom:-150px;right:-150px;animation-duration:22s;animation-delay:-5s;}
+.orb3{width:300px;height:300px;background:var(--accent2);top:50%;left:60%;animation-duration:14s;animation-delay:-8s;}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-50px) scale(1.05)}66%{transform:translate(-20px,30px) scale(.95)}}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(2,4,8,0.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;letter-spacing:.1em;background:linear-gradient(135deg,var(--accent),var(--accent4));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nav-links{display:flex;gap:2rem;list-style:none;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;transition:color .2s;}
+.nav-links a:hover{color:var(--accent);}
+
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:6rem 2rem 4rem;z-index:1;}
+.hero-badge{display:inline-block;padding:.35rem 1rem;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.3);border-radius:100px;font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.2em;color:var(--accent);margin-bottom:2rem;animation:fadeInDown .8s ease both;}
+.hero h1{font-family:'Orbitron',monospace;font-size:clamp(2rem,7vw,5.5rem);font-weight:900;line-height:1.1;letter-spacing:-.02em;animation:fadeInUp 1s ease .2s both;}
+.hero h1 .line1{display:block;color:var(--text);}
+.hero h1 .line2{display:block;background:linear-gradient(135deg,var(--accent) 0%,var(--accent4) 50%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200%;animation:shimmer 3s ease-in-out infinite,fadeInUp 1s ease .3s both;}
+@keyframes shimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.hero-sub{max-width:650px;margin:1.5rem auto 0;font-size:1.1rem;color:var(--muted);line-height:1.8;animation:fadeInUp 1s ease .5s both;}
+.hero-cta{display:flex;gap:1rem;justify-content:center;margin-top:2.5rem;animation:fadeInUp 1s ease .7s both;flex-wrap:wrap;}
+.btn-primary{padding:.9rem 2.2rem;background:var(--accent);color:#000;font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;border:none;cursor:pointer;text-decoration:none;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);transition:all .2s;display:inline-block;}
+.btn-primary:hover{box-shadow:var(--glow);transform:translateY(-2px);}
+.btn-secondary{padding:.9rem 2.2rem;background:transparent;color:var(--accent);font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;border:1px solid var(--accent);cursor:pointer;text-decoration:none;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);transition:all .2s;display:inline-block;}
+.btn-secondary:hover{background:rgba(0,212,255,0.1);box-shadow:var(--glow);transform:translateY(-2px);}
+
+.section{position:relative;z-index:1;padding:5rem 2rem;max-width:1200px;margin:0 auto;}
+.section-label{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.3em;color:var(--accent);text-transform:uppercase;margin-bottom:.75rem;}
+.section-title{font-family:'Orbitron',monospace;font-size:clamp(1.6rem,4vw,2.8rem);font-weight:700;letter-spacing:-.02em;margin-bottom:1.5rem;}
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);position:relative;z-index:1;}
+
+/* ALGO TABS */
+.algo-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+.algo-tab{padding:.5rem 1rem;font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.08em;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .2s;clip-path:polygon(5px 0%,100% 0%,calc(100% - 5px) 100%,0% 100%);}
+.algo-tab:hover{border-color:var(--accent);color:var(--accent);}
+.algo-tab.active{background:rgba(0,212,255,0.1);border-color:var(--accent);color:var(--accent);}
+
+/* SIMULATOR */
+.simulator{background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:2rem;position:relative;overflow:hidden;}
+.simulator::before{content:'';position:absolute;top:0;left:-100%;right:100%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanLine 3s ease-in-out infinite;}
+@keyframes scanLine{0%{left:-100%;right:100%}100%{left:100%;right:-100%}}
+.sim-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;}
+.sim-title{font-family:'Orbitron',monospace;font-size:.8rem;font-weight:700;letter-spacing:.1em;color:var(--accent);}
+.sim-controls{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;}
+.sim-btn{padding:.45rem 1rem;font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.08em;cursor:pointer;border:1px solid;background:transparent;transition:all .2s;clip-path:polygon(5px 0%,100% 0%,calc(100% - 5px) 100%,0% 100%);}
+.sim-btn.start{color:var(--accent3);border-color:var(--accent3);}
+.sim-btn.start:hover{background:rgba(127,255,107,0.1);box-shadow:0 0 15px rgba(127,255,107,0.3);}
+.sim-btn.pause{color:var(--accent2);border-color:var(--accent2);}
+.sim-btn.pause:hover{background:rgba(255,107,53,0.1);}
+.sim-btn.reset{color:var(--muted);border-color:var(--muted);}
+.sim-btn.reset:hover{color:var(--text);border-color:var(--text);}
+.sim-btn.add{color:var(--accent4);border-color:var(--accent4);}
+.sim-btn.add:hover{background:rgba(191,95,255,0.1);}
+.slider-label{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--muted);white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;width:90px;height:3px;background:var(--surface2);border-radius:100px;outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;background:var(--accent);border-radius:50%;cursor:pointer;box-shadow:0 0 8px var(--accent);}
+input[type=number]{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:.35rem .5rem;width:55px;outline:none;}
+input[type=number]:focus{border-color:var(--accent);}
+
+/* PROCESS GRID */
+.process-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1rem;margin-bottom:1.5rem;}
+.process-card{background:var(--surface2);border:1px solid var(--border);border-radius:2px;padding:1rem;position:relative;transition:all .3s;animation:cardAppear .4s ease both;}
+@keyframes cardAppear{from{opacity:0;transform:scale(.9) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.process-card.running{border-color:var(--accent3);box-shadow:0 0 20px rgba(127,255,107,0.15);}
+.process-card.waiting{border-color:rgba(0,212,255,0.3);}
+.process-card.starving{border-color:var(--accent2);box-shadow:0 0 20px rgba(255,107,53,0.2);animation:starvePulse 1s ease-in-out infinite;}
+.process-card.completed{opacity:.4;border-color:rgba(74,112,144,0.3);}
+@keyframes starvePulse{0%,100%{box-shadow:0 0 20px rgba(255,107,53,0.2)}50%{box-shadow:0 0 35px rgba(255,107,53,0.5)}}
+.process-id{font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted);letter-spacing:.15em;margin-bottom:.25rem;}
+.process-name{font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;margin-bottom:.65rem;}
+.process-status{display:inline-flex;align-items:center;gap:.4rem;padding:.18rem .55rem;border-radius:100px;font-size:.62rem;font-family:'Share Tech Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.65rem;}
+.status-dot{width:5px;height:5px;border-radius:50%;}
+.process-card.running .process-status{background:rgba(127,255,107,0.1);color:var(--accent3);}
+.process-card.running .status-dot{background:var(--accent3);animation:blink .8s ease-in-out infinite;}
+.process-card.waiting .process-status{background:rgba(0,212,255,0.1);color:var(--accent);}
+.process-card.waiting .status-dot{background:var(--accent);}
+.process-card.starving .process-status{background:rgba(255,107,53,0.15);color:var(--accent2);}
+.process-card.starving .status-dot{background:var(--accent2);animation:blink .4s ease-in-out infinite;}
+.process-card.completed .process-status{background:rgba(74,112,144,0.1);color:var(--muted);}
+.process-card.completed .status-dot{background:var(--muted);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.bar-row{display:flex;align-items:center;gap:.4rem;margin-bottom:.35rem;}
+.bar-label{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--muted);width:50px;flex-shrink:0;}
+.bar-track{flex:1;height:4px;background:rgba(255,255,255,0.05);border-radius:100px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:100px;transition:width .5s ease;}
+.bar-val{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--muted);width:26px;text-align:right;}
+.priority-fill{background:linear-gradient(90deg,var(--accent4),var(--accent));}
+.cpu-fill{background:linear-gradient(90deg,var(--accent3),#00ff99);}
+.wait-fill{background:linear-gradient(90deg,var(--accent2),#ffaa00);}
+
+/* GANTT */
+.gantt-wrap{margin-top:1.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:2px;padding:1.25rem;}
+.gantt-title{font-family:'Orbitron',monospace;font-size:.72rem;color:var(--accent);letter-spacing:.12em;margin-bottom:.75rem;}
+.gantt-track{display:flex;gap:2px;height:30px;overflow:hidden;border-radius:2px;margin-bottom:.4rem;}
+.gantt-block{height:100%;min-width:4px;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:.5rem;border-radius:2px;animation:ganttGrow .3s ease both;}
+@keyframes ganttGrow{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
+.gantt-empty{color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:.5rem;}
+
+/* TERMINAL */
+.terminal{background:#000;border:1px solid rgba(0,212,255,0.2);border-radius:2px;padding:1.25rem;font-family:'Share Tech Mono',monospace;font-size:.72rem;height:170px;overflow-y:auto;margin-top:1.5rem;}
+.terminal::-webkit-scrollbar{width:4px;}
+.terminal::-webkit-scrollbar-thumb{background:var(--accent);border-radius:100px;}
+.log-line{margin-bottom:.28rem;animation:fadeInLeft .3s ease both;line-height:1.5;}
+@keyframes fadeInLeft{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.log-time{color:var(--muted);margin-right:.4rem;}
+.log-info{color:var(--accent);}
+.log-warn{color:var(--accent2);}
+.log-success{color:var(--accent3);}
+.log-system{color:var(--accent4);}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin-top:2rem;}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:2px;padding:1.25rem;text-align:center;transition:all .3s;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);transform:scaleX(0);transition:transform .3s;}
+.stat-card:hover::after{transform:scaleX(1);}
+.stat-card:hover{border-color:rgba(0,212,255,0.3);}
+.stat-number{font-family:'Orbitron',monospace;font-size:1.9rem;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent4));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:.3rem;}
+.stat-label{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;}
+
+/* ALGO CARDS */
+.algo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:1.5rem;margin-top:2rem;}
+.algo-card{background:var(--surface);border:1px solid var(--border);border-radius:2px;padding:1.75rem;position:relative;overflow:hidden;transition:all .3s;cursor:pointer;}
+.algo-card:hover{border-color:rgba(0,212,255,0.4);transform:translateY(-4px);box-shadow:var(--glow);}
+.algo-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);margin-bottom:1.1rem;font-size:1.3rem;background:var(--surface2);clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);}
+.algo-name{font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;margin-bottom:.4rem;color:var(--text);}
+.algo-tag{display:inline-block;padding:.18rem .55rem;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--accent);letter-spacing:.08em;margin-bottom:.9rem;clip-path:polygon(4px 0%,100% 0%,calc(100% - 4px) 100%,0% 100%);}
+.algo-desc{font-size:.88rem;color:var(--muted);line-height:1.75;}
+.algo-metrics{margin-top:1.1rem;display:flex;gap:.75rem;flex-wrap:wrap;}
+.metric-chip{font-family:'Share Tech Mono',monospace;font-size:.58rem;padding:.22rem .55rem;border-radius:100px;letter-spacing:.04em;}
+.metric-chip.good{background:rgba(127,255,107,0.1);color:var(--accent3);}
+.metric-chip.mid{background:rgba(0,212,255,0.1);color:var(--accent);}
+.metric-chip.warn{background:rgba(255,107,53,0.1);color:var(--accent2);}
+
+footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3rem 2rem;text-align:center;}
+.footer-logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;background:linear-gradient(135deg,var(--accent),var(--accent4));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.4rem;}
+.footer-sub{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--muted);letter-spacing:.2em;}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){.nav-links{display:none;}.hero-cta{flex-direction:column;align-items:center;}.process-grid{grid-template-columns:1fr;}.stats-row{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<nav>
+  <div class="nav-logo">FRAS // v2.0</div>
+  <ul class="nav-links">
+    <li><a href="#simulator">Simulator</a></li>
+    <li><a href="#algorithms">Algorithms</a></li>
+    <li><a href="#about">About</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="hero-badge">// MULTIPROGRAMMING RESOURCE MANAGER</div>
+    <h1>
+      <span class="line1">FAIR RESOURCE</span>
+      <span class="line2">ALLOCATION SYSTEM</span>
+    </h1>
+    <p class="hero-sub">A dynamic priority-based scheduler that prevents starvation, adapts to process behavior, and maximizes CPU utilization across multiprogramming environments.</p>
+    <div class="hero-cta">
+      <a href="#simulator" class="btn-primary">Launch Simulator</a>
+      <a href="#algorithms" class="btn-secondary">View Algorithms</a>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SIMULATOR -->
+<section class="section" id="simulator">
+  <div class="section-label">// LIVE DEMO</div>
+  <div class="section-title">Process Scheduler Simulator</div>
+
+  <div class="algo-tabs" id="algoTabs"></div>
+
+  <div class="simulator">
+    <div class="sim-header">
+      <div class="sim-title" id="simTitle">// SCHEDULER — AGING — TICK:0000</div>
+      <div class="sim-controls">
+        <span class="slider-label">SPEED:</span>
+        <input type="range" id="speedSlider" min="200" max="1500" step="100" value="700"/>
+        <input type="number" id="burstInput" value="10" min="3" max="30" title="Burst time"/>
+        <button class="sim-btn add" onclick="addProcess()">+ ADD</button>
+        <button class="sim-btn start" id="runBtn" onclick="toggleRun()">▶ RUN</button>
+        <button class="sim-btn reset" onclick="resetSim()">↺ RESET</button>
+      </div>
+    </div>
+    <div class="process-grid" id="processGrid"></div>
+    <div class="gantt-wrap">
+      <div class="gantt-title">// CPU GANTT CHART (last 60 quanta)</div>
+      <div class="gantt-track" id="ganttTrack"><div class="gantt-empty">Press RUN to start scheduling...</div></div>
+    </div>
+    <div class="terminal" id="terminal"><span style="color:var(--muted)">&gt; Awaiting scheduler initialization...</span></div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-number" id="statUtil">0%</div><div class="stat-label">CPU Utilization</div></div>
+    <div class="stat-card"><div class="stat-number" id="statDone">0/0</div><div class="stat-label">Completed</div></div>
+    <div class="stat-card"><div class="stat-number" id="statWait">0T</div><div class="stat-label">Avg Wait Time</div></div>
+    <div class="stat-card"><div class="stat-number" id="statStarv" style="color:var(--accent3)">0</div><div class="stat-label">Starving Procs</div></div>
+    <div class="stat-card"><div class="stat-number" id="statTick">0</div><div class="stat-label">Total Ticks</div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ALGORITHMS -->
+<section class="section" id="algorithms">
+  <div class="section-label">// SCHEDULING ALGORITHMS</div>
+  <div class="section-title">How Fairness is Achieved</div>
+  <p style="color:var(--muted);font-size:.95rem;line-height:1.8;max-width:700px;margin-bottom:1rem;">Each algorithm approaches resource fairness differently. Click a card to switch the simulator to that algorithm.</p>
+  <div class="algo-grid" id="algoGrid"></div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="section-label">// SYSTEM OVERVIEW</div>
+  <div class="section-title">Preventing Starvation</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.5rem;margin-top:2rem;">
+    <div class="algo-card"><div class="algo-icon">🛡</div><div class="algo-name">Anti-Starvation Guarantee</div><div class="algo-desc">Every process is guaranteed CPU time. When a process waits beyond the starvation threshold, the system automatically boosts its priority to ensure forward progress.</div></div>
+    <div class="algo-card"><div class="algo-icon">📈</div><div class="algo-name">Dynamic Priority Adjustment</div><div class="algo-desc">Process priorities are not static. The system continuously recalculates effective priorities based on wait time, burst behavior, and CPU usage history.</div></div>
+    <div class="algo-card"><div class="algo-icon">⚡</div><div class="algo-name">Maximized CPU Utilization</div><div class="algo-desc">By keeping the ready queue optimally populated and minimizing idle cycles, FRAS ensures the CPU stays busy while maintaining per-process fairness guarantees.</div></div>
+    <div class="algo-card"><div class="algo-icon">🔍</div><div class="algo-name">Real-Time Observability</div><div class="algo-desc">Every scheduling decision is logged with timestamps. The Gantt chart visualizes CPU allocation across time, making starvation events and boosts instantly visible.</div></div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">FRAS // FAIR RESOURCE ALLOCATION SYSTEM</div>
+  <div class="footer-sub">MULTIPROGRAMMING ENVIRONMENT SCHEDULER</div>
+</footer>
+
+<script>
+const ALGOS = [
+  {id:'aging',name:'Priority Aging',tag:'ANTI-STARVATION',icon:'⏱',desc:'Dynamically increases the priority of processes that have been waiting too long, preventing starvation by aging their base priority over time.',metrics:['Starvation-Free','Dynamic Priority','Fair'],types:['good','mid','good']},
+  {id:'rr',name:'Round Robin',tag:'TIME-SHARING',icon:'🔄',desc:'Each process gets a fixed time quantum. After expiry, the process is moved to the back of the ready queue, ensuring equal CPU time for all processes.',metrics:['Equal Time-Slice','Context-Switch Heavy','Responsive'],types:['good','warn','good']},
+  {id:'mlfq',name:'MLFQ',tag:'ADAPTIVE',icon:'📊',desc:'Processes move between queues based on CPU burst behavior. I/O-bound processes get boosted priority, CPU-bound processes are demoted progressively.',metrics:['Adaptive','CPU-Burst Aware','Optimal'],types:['good','mid','good']},
+  {id:'lottery',name:'Lottery',tag:'PROBABILISTIC',icon:'🎲',desc:'Assigns lottery tickets proportional to priority. A random winning ticket is drawn each quantum. Higher priority = more tickets = better CPU odds.',metrics:['Probabilistic','Proportional','Simple'],types:['mid','good','good']},
+  {id:'stride',name:'Stride',tag:'DETERMINISTIC',icon:'📏',desc:'Deterministic variant of lottery. Each process has a stride inversely proportional to priority. Process with smallest pass value is selected next.',metrics:['Deterministic','Precise Control','Fair'],types:['good','good','good']},
+  {id:'wfq',name:'WFQ',tag:'WEIGHTED',icon:'⚖',desc:'Assigns weights to processes and distributes CPU time proportionally. Guarantees minimum service rates while allowing excess capacity to flow to high-demand processes.',metrics:['Guaranteed Rates','Weight-Based','Network-Inspired'],types:['good','mid','good']},
+];
+
+const NAMES=['Alpha','Beta','Gamma','Delta','Epsilon','Zeta','Eta','Theta','Iota','Kappa'];
+const COLORS=['#00d4ff','#7fff6b','#ff6b35','#bf5fff','#ffd700','#ff69b4','#00ffcc','#ff4757','#3742fa','#eccc68'];
+const STARVE_THRESH=18;
+
+let processes=[], running=false, tick=0, gantt=[], logs=[], algo='aging';
+let idleCount=0, pidCounter=0, intervalId=null;
+
+function genProcess(id){
+  const burst=Math.floor(Math.random()*18)+5;
+  const pri=Math.floor(Math.random()*8)+1;
+  return {id,name:NAMES[id%10],color:COLORS[id%10],priority:pri,basePriority:pri,burstTime:burst,remainingTime:burst,waitTime:0,cpuTime:0,status:'waiting',tickets:pri*5,pass:0,weight:Math.random()*.8+.2,level:0};
+}
+
+function init(alg){
+  algo=alg||algo;
+  processes=Array.from({length:5},(_,i)=>genProcess(i));
+  pidCounter=5; gantt=[]; logs=[]; tick=0; idleCount=0;
+  running=false;
+  clearInterval(intervalId);
+  document.getElementById('runBtn').textContent='▶ RUN';
+  document.getElementById('runBtn').className='sim-btn start';
+  addLog('System initialized — 5 processes loaded','system');
+  addLog('Algorithm: '+algo.toUpperCase(),'system');
+  render();
+}
+
+function selectNext(){
+  const active=processes.filter(p=>p.status!=='completed'&&p.remainingTime>0);
+  if(!active.length) return null;
+  if(algo==='aging'){
+    const aged=active.map(p=>({...p,eff:p.basePriority+Math.floor(p.waitTime/5)}));
+    aged.sort((a,b)=>b.eff-a.eff); return aged[0].id;
+  }
+  if(algo==='rr'){active.sort((a,b)=>b.waitTime-a.waitTime); return active[0].id;}
+  if(algo==='mlfq'){
+    for(let lv=0;lv<4;lv++){const lp=active.filter(p=>p.level===lv);if(lp.length){lp.sort((a,b)=>b.waitTime-a.waitTime);return lp[0].id;}}
+    return active[0].id;
+  }
+  if(algo==='lottery'){
+    const tot=active.reduce((s,p)=>s+p.tickets,0);
+    let w=Math.floor(Math.random()*tot);
+    for(const p of active){w-=p.tickets;if(w<=0)return p.id;}
+    return active[0].id;
+  }
+  if(algo==='stride'){
+    const min=active.reduce((m,p)=>p.pass<m?p.pass:m,Infinity);
+    return active.find(p=>p.pass===min).id;
+  }
+  if(algo==='wfq'){
+    const tw=active.reduce((s,p)=>s+p.weight,0);
+    active.sort((a,b)=>(b.weight/tw)-(a.weight/tw));
+    const sel=active.find(p=>p.cpuTime/(p.weight/tw+.001)<tick+1);
+    return (sel||active[0]).id;
+  }
+  return active[0].id;
+}
+
+function step(){
+  tick++;
+  const nextId=selectNext();
+  if(nextId===null){
+    idleCount++;
+    addLog('CPU IDLE — no active processes','warn');
+    gantt=[...gantt.slice(-60),{id:-1,name:'IDLE',color:'#1a2a3a'}];
+    render(); return;
+  }
+  processes=processes.map(p=>{
+    if(p.status==='completed') return p;
+    const np={...p};
+    if(np.id===nextId){
+      np.status='running'; np.cpuTime++; np.remainingTime--;
+      if(algo==='stride') np.pass+=Math.round(100/(np.weight+.01));
+      if(algo==='mlfq'&&np.cpuTime%4===0&&np.level<3) np.level++;
+      if(np.remainingTime<=0){
+        np.status='completed';
+        addLog(`P${np.id}:${np.name} COMPLETED — waited ${np.waitTime}T, ran ${np.cpuTime}T`,'success');
+      } else if(tick%4===0) addLog(`P${np.id}:${np.name} running — remaining ${np.remainingTime}T`,'info');
+    } else if(np.remainingTime>0){
+      np.waitTime++;
+      if(algo==='aging') np.basePriority=Math.min(20,np.basePriority+.1);
+      if(algo==='mlfq'&&np.waitTime>12&&np.level>0) np.level=Math.max(0,np.level-1);
+      const starving=np.waitTime>=STARVE_THRESH;
+      np.status=starving?'starving':'waiting';
+      if(starving&&np.waitTime===STARVE_THRESH){
+        addLog(`⚠ P${np.id}:${np.name} STARVATION RISK — wait=${np.waitTime}T, boosting!`,'warn');
+        if(algo==='lottery') np.tickets=Math.min(100,np.tickets+10);
+      }
+    }
+    return np;
+  });
+  const cur=processes.find(p=>p.id===nextId);
+  if(cur) gantt=[...gantt.slice(-60),{id:cur.id,name:cur.name,color:cur.color}];
+  if(processes.every(p=>p.status==='completed')){
+    running=false; clearInterval(intervalId);
+    addLog('✓ ALL PROCESSES COMPLETED','success');
+    document.getElementById('runBtn').textContent='▶ RUN';
+    document.getElementById('runBtn').className='sim-btn start';
+  }
+  render();
+}
+
+function toggleRun(){
+  running=!running;
+  const btn=document.getElementById('runBtn');
+  if(running){
+    btn.textContent='⏸ PAUSE'; btn.className='sim-btn pause';
+    const spd=parseInt(document.getElementById('speedSlider').value);
+    intervalId=setInterval(step,spd);
+  } else {
+    btn.textContent='▶ RUN'; btn.className='sim-btn start';
+    clearInterval(intervalId);
+  }
+}
+
+function resetSim(){running=false;clearInterval(intervalId);init(algo);}
+
+function addProcess(){
+  const burst=parseInt(document.getElementById('burstInput').value)||10;
+  const p=genProcess(pidCounter++);
+  p.burstTime=burst; p.remainingTime=burst;
+  if(algo==='lottery') p.tickets=p.priority*5;
+  processes=[...processes,p];
+  addLog(`+ P${p.id}:${p.name} added — burst=${p.burstTime}T pri=${p.priority}`,'system');
+  render();
+}
+
+function addLog(msg,type='info'){
+  const time=String(tick).padStart(4,'0');
+  logs=[...logs.slice(-60),{time,msg,type,key:Math.random()}];
+  const t=document.getElementById('terminal');
+  if(t) setTimeout(()=>{t.scrollTop=t.scrollHeight;},50);
+}
+
+function render(){
+  // title
+  document.getElementById('simTitle').textContent=`// SCHEDULER — ${algo.toUpperCase()} — TICK:${String(tick).padStart(4,'0')}`;
+
+  // process grid
+  const grid=document.getElementById('processGrid');
+  grid.innerHTML=processes.map(p=>{
+    const cpuPct=Math.round((p.cpuTime/(p.burstTime||1))*100);
+    const waitPct=Math.min(100,Math.round((p.waitTime/STARVE_THRESH)*100));
+    const priPct=Math.round((p.priority/20)*100);
+    let extra='';
+    if(algo==='lottery') extra=`<div class="bar-row"><span class="bar-label">TICKETS</span><div class="bar-track"><div class="bar-fill priority-fill" style="width:${Math.min(100,p.tickets)}%"></div></div><span class="bar-val">${p.tickets}</span></div>`;
+    if(algo==='mlfq') extra=`<div class="bar-row"><span class="bar-label">LEVEL</span><div class="bar-track"><div class="bar-fill priority-fill" style="width:${((3-p.level)/3)*100}%"></div></div><span class="bar-val">Q${p.level}</span></div>`;
+    return `<div class="process-card ${p.status}">
+      <div class="process-id">PID-${String(p.id).padStart(3,'0')}</div>
+      <div class="process-name" style="color:${p.color}">${p.name}</div>
+      <div class="process-status"><span class="status-dot"></span>${p.status.toUpperCase()}</div>
+      <div class="bar-row"><span class="bar-label">PRIORITY</span><div class="bar-track"><div class="bar-fill priority-fill" style="width:${priPct}%"></div></div><span class="bar-val">${typeof p.priority==='number'?p.priority.toFixed(0):p.priority}</span></div>
+      <div class="bar-row"><span class="bar-label">CPU TIME</span><div class="bar-track"><div class="bar-fill cpu-fill" style="width:${cpuPct}%"></div></div><span class="bar-val">${p.cpuTime}T</span></div>
+      <div class="bar-row"><span class="bar-label">WAIT</span><div class="bar-track"><div class="bar-fill wait-fill" style="width:${waitPct}%"></div></div><span class="bar-val">${p.waitTime}T</span></div>
+      ${extra}
+    </div>`;
+  }).join('');
+
+  // gantt
+  const gt=document.getElementById('ganttTrack');
+  if(gantt.length===0){gt.innerHTML='<div class="gantt-empty">Press RUN to start scheduling...</div>';}
+  else{gt.innerHTML=gantt.map(g=>`<div class="gantt-block" style="flex:1;background:${g.color};opacity:.85;color:#000;font-weight:700;" title="${g.name}">${gantt.length<40?g.name[0]:''}</div>`).join('');}
+
+  // terminal
+  const term=document.getElementById('terminal');
+  term.innerHTML=logs.length===0?'<span style="color:var(--muted)">&gt; Awaiting scheduler initialization...</span>':logs.map(l=>`<div class="log-line"><span class="log-time">[T${l.time}]</span><span class="log-${l.type}"> ${l.msg}</span></div>`).join('');
+
+  // stats
+  const done=processes.filter(p=>p.status==='completed').length;
+  const avgW=processes.length?Math.round(processes.reduce((s,p)=>s+p.waitTime,0)/processes.length):0;
+  const util=tick>0?Math.round(((tick-idleCount)/tick)*100):0;
+  const starv=processes.filter(p=>p.status==='starving').length;
+  document.getElementById('statUtil').textContent=util+'%';
+  document.getElementById('statDone').textContent=done+'/'+processes.length;
+  document.getElementById('statWait').textContent=avgW+'T';
+  document.getElementById('statTick').textContent=tick;
+  const se=document.getElementById('statStarv');
+  se.textContent=starv;
+  se.style.color=starv>0?'var(--accent2)':'var(--accent3)';
+}
+
+function buildUI(){
+  // tabs
+  const tabs=document.getElementById('algoTabs');
+  tabs.innerHTML=ALGOS.map(a=>`<button class="algo-tab ${a.id===algo?'active':''}" onclick="switchAlgo('${a.id}')">${a.icon} ${a.name}</button>`).join('');
+  // algo grid
+  const ag=document.getElementById('algoGrid');
+  ag.innerHTML=ALGOS.map(a=>`<div class="algo-card" onclick="switchAlgo('${a.id}')">
+    <div class="algo-icon">${a.icon}</div>
+    <div class="algo-name">${a.name}</div>
+    <div class="algo-tag">${a.tag}</div>
+    <div class="algo-desc">${a.desc}</div>
+    <div class="algo-metrics">${a.metrics.map((m,i)=>`<span class="metric-chip ${a.types[i]}">${m}</span>`).join('')}</div>
+  </div>`).join('');
+}
+
+function switchAlgo(id){
+  algo=id; running=false; clearInterval(intervalId);
+  // update tabs
+  document.querySelectorAll('.algo-tab').forEach(t=>{
+    t.classList.toggle('active',t.textContent.includes(ALGOS.find(a=>a.id===id).name.split(' ')[0]));
+  });
+  init(id);
+  document.getElementById('simulator').scrollIntoView({behavior:'smooth'});
+}
+
+// Speed slider live update
+document.getElementById('speedSlider').addEventListener('input',()=>{
+  if(running){clearInterval(intervalId);const spd=parseInt(document.getElementById('speedSlider').value);intervalId=setInterval(step,spd);}
+});
+
+buildUI();
+init('aging');
+</script>
+</body>
+</html>
