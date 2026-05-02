@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="Interactive fair resource allocation scheduler simulator with priority aging, round robin, MLFQ, lottery, stride, and WFQ."/>
+<meta name="theme-color" content="#020408"/>
 <title>Fair Resource Allocation System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
@@ -59,6 +61,8 @@ nav.scrolled{padding:.65rem 2rem;border-bottom-color:rgba(0,212,255,0.3);}
 .section{position:relative;z-index:1;padding:5rem 2rem;max-width:1200px;margin:0 auto;}
 .section-label{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.3em;color:var(--accent);text-transform:uppercase;margin-bottom:.75rem;}
 .section-title{font-family:'Orbitron',monospace;font-size:clamp(1.6rem,4vw,2.8rem);font-weight:700;letter-spacing:-.02em;margin-bottom:1.5rem;}
+.section-desc{color:var(--muted);font-size:.95rem;line-height:1.8;max-width:700px;margin-bottom:1rem;}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 .divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);position:relative;z-index:1;}
  
 .algo-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;}
@@ -196,10 +200,11 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
     <li><a href="#simulator">Simulator</a></li>
     <li><a href="#algorithms">Algorithms</a></li>
     <li><a href="#about">About</a></li>
-    <li><button class="dim-toggle" onclick="toggleDim()" id="dimBtn">◑ DIM</button></li>
+    <li><button type="button" class="dim-toggle" onclick="toggleDim()" id="dimBtn" aria-label="Toggle dim mode">◑ DIM</button></li>
     <li><span class="nav-version">v2.3-FINAL</span></li>
   </ul>
 </nav>
+<main>
  
 <section class="hero">
   <div>
@@ -238,10 +243,10 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
     <div class="sim-header">
       <div class="sim-title" id="simTitle">// SCHEDULER — AGING — TICK:0000</div>
       <div class="sim-controls">
-        <span class="slider-label">SPEED:</span>
+        <label class="slider-label" for="speedSlider">SPEED:</label>
         <input type="range" id="speedSlider" min="200" max="1500" step="100" value="700"/>
         <!-- NEW: process count selector for RESET -->
-        <span class="slider-label">PROCS:</span>
+        <label class="slider-label" for="procCount">PROCS:</label>
         <select class="sim-select" id="procCount" title="Initial process count">
           <option value="3">3</option>
           <option value="5" selected>5</option>
@@ -249,14 +254,16 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
           <option value="10">10</option>
         </select>
         <!-- NEW: priority input for added process -->
-        <input type="number" id="burstInput" value="10" min="3" max="30" title="Burst time for new process"/>
-        <input type="number" id="prioInput" value="4" min="1" max="10" title="Priority for new process (1=low, 10=high)"/>
-        <button class="sim-btn add" onclick="addProcess()">+ ADD</button>
-        <button class="sim-btn start" id="runBtn" onclick="toggleRun()">▶ RUN</button>
-        <button class="sim-btn reset" onclick="resetSim()">↺ RESET</button>
-        <button class="sim-btn sound" id="soundBtn" onclick="toggleSound()" title="Toggle completion sound">🔇 SFX</button>
+        <label class="visually-hidden" for="burstInput">Burst time</label>
+        <input type="number" id="burstInput" value="10" min="3" max="30" title="Burst time for new process" aria-label="Burst time for new process"/>
+        <label class="visually-hidden" for="prioInput">Priority</label>
+        <input type="number" id="prioInput" value="4" min="1" max="10" title="Priority for new process (1=low, 10=high)" aria-label="Priority for new process (1 low, 10 high)"/>
+        <button type="button" class="sim-btn add" onclick="addProcess()" aria-label="Add new process">+ ADD</button>
+        <button type="button" class="sim-btn start" id="runBtn" onclick="toggleRun()" aria-label="Toggle simulation run/pause">▶ RUN</button>
+        <button type="button" class="sim-btn reset" onclick="resetSim()" aria-label="Reset simulation">↺ RESET</button>
+        <button type="button" class="sim-btn sound" id="soundBtn" onclick="toggleSound()" title="Toggle completion sound" aria-label="Toggle sound effects">🔇 SFX</button>
         <!-- NEW: CSV export -->
-        <button class="sim-btn export" onclick="exportCSV()" title="Export process stats as CSV">⬇ CSV</button>
+        <button type="button" class="sim-btn export" onclick="exportCSV()" title="Export process stats as CSV" aria-label="Export process statistics">⬇ CSV</button>
       </div>
     </div>
     <div class="process-grid" id="processGrid"></div>
@@ -277,13 +284,14 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:3r
     <div class="stat-card"><div class="stat-number" id="statTick">0</div><div class="stat-label">Total Ticks</div></div>
   </div>
 </section>
+</main>
  
 <div class="divider"></div>
  
 <section class="section" id="algorithms">
   <div class="section-label">// SCHEDULING ALGORITHMS</div>
   <div class="section-title">How Fairness is Achieved</div>
-  <p style="color:var(--muted);font-size:.95rem;line-height:1.8;max-width:700px;margin-bottom:1rem;">Each algorithm approaches resource fairness differently. Click a card to switch the simulator to that algorithm.</p>
+  <p class="section-desc">Each algorithm approaches resource fairness differently. Click a card to switch the simulator to that algorithm.</p>
   <div class="algo-grid" id="algoGrid"></div>
 </section>
  
@@ -505,7 +513,7 @@ function render(){
     if(algo==='lottery') extra=`<div class="bar-row"><span class="bar-label">TICKETS</span><div class="bar-track"><div class="bar-fill priority-fill" style="width:${Math.min(100,p.tickets)}%"></div></div><span class="bar-val">${p.tickets}</span></div>`;
     if(algo==='mlfq') extra=`<div class="bar-row"><span class="bar-label">LEVEL</span><div class="bar-track"><div class="bar-fill priority-fill" style="width:${((3-p.level)/3)*100}%"></div></div><span class="bar-val">Q${p.level}</span></div>`;
     if(algo==='stride') extra=`<div class="bar-row"><span class="bar-label">PASS</span><div class="bar-track"><div class="bar-fill priority-fill" style="width:${Math.min(100,p.pass/10)}%"></div></div><span class="bar-val">${p.pass}</span></div>`;
-    const killBtn=p.status!=='completed'?`<button class="kill-btn" onclick="killProcess(${p.id})" title="Terminate process">✕</button>`:'';
+    const killBtn=p.status!=='completed'?`<button type="button" class="kill-btn" onclick="killProcess(${p.id})" title="Terminate process">✕</button>`:'';
     return `<div class="process-card ${p.status}">
       ${killBtn}
       <div class="process-id">PID-${String(p.id).padStart(3,'0')}</div>
@@ -549,7 +557,7 @@ function render(){
  
 function buildUI(){
   const tabs=document.getElementById('algoTabs');
-  tabs.innerHTML=ALGOS.map(a=>`<button class="algo-tab ${a.id===algo?'active':''}" data-tip="${a.tip}" onclick="switchAlgo('${a.id}')">${a.icon} ${a.name}</button>`).join('');
+  tabs.innerHTML=ALGOS.map(a=>`<button type="button" class="algo-tab ${a.id===algo?'active':''}" data-algo="${a.id}" data-tip="${a.tip}" onclick="switchAlgo('${a.id}')">${a.icon} ${a.name}</button>`).join('');
   const ag=document.getElementById('algoGrid');
   ag.innerHTML=ALGOS.map(a=>`<div class="algo-card" onclick="switchAlgo('${a.id}')">
     <div class="algo-icon">${a.icon}</div>
@@ -563,7 +571,7 @@ function buildUI(){
 function switchAlgo(id){
   algo=id; running=false; clearInterval(intervalId);
   document.querySelectorAll('.algo-tab').forEach(t=>{
-    t.classList.toggle('active',t.textContent.includes(ALGOS.find(a=>a.id===id).name.split(' ')[0]));
+    t.classList.toggle('active', t.dataset.algo===id);
   });
   init(id);
   document.getElementById('simulator').scrollIntoView({behavior:'smooth'});
